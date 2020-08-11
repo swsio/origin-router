@@ -50,6 +50,7 @@ COPY --from=RPM /root/rpmbuild/RPMS/x86_64/haproxy*.rpm /tmp/
 USER 0
 
 RUN yum update -y \
+    && yum remove -y haproxy18-1.8.1-5.el7.x86_64 \
     && yum install -y epel-release && yum install -y openssl11-libs \
     && yum localinstall -y /tmp/haproxy*.rpm && rm -f tmp/haproxy*.rpm \
     && setcap 'cap_net_bind_service=ep' /usr/sbin/haproxy
