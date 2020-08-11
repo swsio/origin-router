@@ -1,0 +1,11 @@
+--- haproxy-config.template	2019-06-10 23:10:35.000000000 +0000
++++ haproxy-config.template.2	2019-09-22 21:22:23.664854000 +0000
+@@ -448,6 +448,8 @@
+     {{- end }}{{/* hsts header */}}
+   {{- end }}{{/* is "edge" or "reencrypt" */}}
+
++  http-response set-header X-Robots-Tag none
++
+   {{- range $serviceUnitName, $weight := $cfg.ServiceUnitNames }}
+     {{- if ge $weight 0 }}{{/* weight=0 is reasonable to keep existing connections to backends with cookies as we can see the HTTP headers */}}
+       {{- with $serviceUnit := index $.ServiceUnits $serviceUnitName }}

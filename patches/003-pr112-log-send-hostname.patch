@@ -1,0 +1,25 @@
+From e7b983a8d06ca578b736ae00576588d9e444b5ba Mon Sep 17 00:00:00 2001
+From: Miciah Masters <miciah.masters@gmail.com>
+Date: Tue, 7 Apr 2020 15:29:29 -0400
+Subject: [PATCH] Set log-send-hostname in haproxy-config.template
+
+Set the hostname field in the syslog header if syslog is configured.
+
+* images/router/haproxy/conf/haproxy-config.template (global):
+Set log-send-hostname.
+---
+ images/router/haproxy/conf/haproxy-config.template | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/images/router/haproxy/conf/haproxy-config.template b/images/router/haproxy/conf/haproxy-config.template
+index e91dea3..4d6e9ce 100644
+--- a/images/router/haproxy/conf/haproxy-config.template
++++ b/images/router/haproxy/conf/haproxy-config.template
+@@ -44,6 +44,7 @@ global
+   daemon
+ {{- with (env "ROUTER_SYSLOG_ADDRESS") }}
+   log {{.}} {{env "ROUTER_LOG_FACILITY" "local1"}} {{env "ROUTER_LOG_LEVEL" "warning"}}
++  log-send-hostname
+ {{- end}}
+   ca-base /etc/ssl
+   crt-base /etc/ssl

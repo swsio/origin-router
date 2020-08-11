@@ -1,0 +1,28 @@
+From 7cbf5de1bfa6f3d7adcc17b1c75f08f4c1c148ea Mon Sep 17 00:00:00 2001
+From: Daneyon Hansen <daneyonhansen@gmail.com>
+Date: Mon, 17 Feb 2020 15:45:31 -0800
+Subject: [PATCH] Bug 1803001: Removes Unneeded proto-version Header
+
+---
+ images/router/haproxy/conf/haproxy-config.template | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/images/router/haproxy/conf/haproxy-config.template b/images/router/haproxy/conf/haproxy-config.template
+index 8f4eed6..e91dea3 100644
+--- a/images/router/haproxy/conf/haproxy-config.template
++++ b/images/router/haproxy/conf/haproxy-config.template
+@@ -431,11 +431,11 @@ backend {{genBackendNamePrefix $cfg.TLSTermination}}:{{$cfgIdx}}
+   http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+   http-request set-header X-Forwarded-Proto https if { ssl_fc }
+   http-request set-header X-Forwarded-Proto-Version h2 if { ssl_fc_alpn -i h2 }
+-  # Forwarded header: quote IPv6 addresses and values that may be empty as per https://tools.ietf.org/html/rfc7239
+   {{- if matchPattern "(v4)?v6" $router_ip_v4_v6_mode }}
+-  http-request add-header Forwarded for=\"[%[src]]\";host=%[req.hdr(host)];proto=%[req.hdr(X-Forwarded-Proto)];proto-version=\"%[req.hdr(X-Forwarded-Proto-Version)]\"
++  # See the quoting rules in https://tools.ietf.org/html/rfc7239 for IPv6 addresses (v4 addresses get translated to v6 when in hybrid mode)
++  http-request add-header Forwarded for=\"[%[src]]\";host=%[req.hdr(host)];proto=%[req.hdr(X-Forwarded-Proto)]
+   {{- else }}
+-  http-request add-header Forwarded for=%[src];host=%[req.hdr(host)];proto=%[req.hdr(X-Forwarded-Proto)];proto-version=\"%[req.hdr(X-Forwarded-Proto-Version)]\"
++  http-request add-header Forwarded for=%[src];host=%[req.hdr(host)];proto=%[req.hdr(X-Forwarded-Proto)]
+   {{- end }}
+ 
+   {{- if not (isTrue (index $cfg.Annotations "haproxy.router.openshift.io/disable_cookies")) }}

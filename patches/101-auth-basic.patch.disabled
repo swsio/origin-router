@@ -1,0 +1,53 @@
+--- haproxy-config.template	2020-04-09 23:35:06.000000000 +0200
++++ haproxy-config.template.1	2020-04-10 01:40:52.000000000 +0200
+@@ -32,6 +32,9 @@
+ {{- $hstsOptionalTokenPattern := `(?:includeSubDomains|preload)` }}
+ {{- $hstsPattern := printf `(?:%[1]s[;])*max-age=(?:\d+|"\d+")(?:[;]%[1]s)*`  $hstsOptionalTokenPattern -}}
+ 
++{{- $authRealmPattern := `(?:[a-zA-Z0-9_\-@\.]|\\ )+` -}}
++{{- $authPasswordPattern := `\$[0-9]+\$.+` -}}
++
+ global
+   maxconn {{env "ROUTER_MAX_CONNECTIONS" "20000"}}
+ {{- $threads := env "ROUTER_THREADS" }}
+@@ -374,6 +377,17 @@
+           passed through to the backend pod by just looking at the TCP headers.
+ */}}
+ {{- range $cfgIdx, $cfg := .State }}
++
++  {{- if matchValues (index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-type") "basic" }}
++    {{- if matchPattern $cookieNamePattern (index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-user") }}
++      {{- if matchPattern $authPasswordPattern (index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-password") }}
++
++userlist {{genBackendNamePrefix $cfg.TLSTermination}}:{{$cfgIdx}}
++  user {{ index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-user" }} password {{ index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-password" }}
++      {{- end }}
++    {{- end }}
++  {{- end }}
++
+   {{- if matchValues (print $cfg.TLSTermination) "" "edge" "reencrypt" }}
+ 
+ # Plain http backend or backend with TLS terminated at the edge or a
+@@ -424,6 +438,22 @@
+       {{- end }}
+     {{- end }}
+ 
++    {{- if matchValues (index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-type") "basic" }}
++      {{- if matchPattern $cookieNamePattern (index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-user") }}
++        {{- if matchPattern $authPasswordPattern (index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-password") }}
++  acl authorized http_auth({{genBackendNamePrefix $cfg.TLSTermination}}:{{$cfgIdx}})
++  acl is_options_request method OPTIONS
++          {{- if matchPattern $authRealmPattern (index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-realm") }}
++  http-request auth realm {{ index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-realm" }} unless authorized{{- if isTrue (index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-options-bypass") }} || is_options_request{{- end }}
++          {{- else }}
++  http-request auth realm Unauthorized unless authorized{{- if isTrue (index $cfg.Annotations "adorsys.haproxy.router.openshift.io/auth-options-bypass") }} || is_options_request{{- end }}
++          {{- end }}
++
++  http-request del-header Authorization
++        {{- end }}
++      {{- end }}
++    {{- end }}
++
+   timeout check 5000ms
+   http-request set-header X-Forwarded-Host %[req.hdr(host)]
+   http-request set-header X-Forwarded-Port %[dst_port]

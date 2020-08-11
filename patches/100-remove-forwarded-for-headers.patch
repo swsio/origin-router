@@ -1,0 +1,35 @@
+--- haproxy-config.template	2019-12-30 13:59:59.000000000 +0100
++++ haproxy-config.template.2	2020-01-01 14:37:44.000000000 +0100
+@@ -162,6 +162,10 @@
+   monitor-uri /_______internal_router_healthz
+   {{- end }}
+ 
++  # https://serverfault.com/questions/608256/haproxy-hdr-ip-acl-unaffected-by-reqidel
++  # https://thisinterestsme.com/x-forwarded-for-spoofing-haproxy/
++  http-request del-header X-Forwarded-For
++
+   # Strip off Proxy headers to prevent HTTpoxy (https://httpoxy.org/)
+   http-request del-header Proxy
+ 
+@@ -236,6 +240,10 @@
+     {{- if isTrue (env "ROUTER_ENABLE_HTTP2") }} alpn h2,http/1.1{{ end }}
+   mode http
+ 
++  # https://serverfault.com/questions/608256/haproxy-hdr-ip-acl-unaffected-by-reqidel
++  # https://thisinterestsme.com/x-forwarded-for-spoofing-haproxy/
++  http-request del-header X-Forwarded-For
++
+   # Strip off Proxy headers to prevent HTTpoxy (https://httpoxy.org/)
+   http-request del-header Proxy
+ 
+@@ -307,6 +315,10 @@
+     {{- end }}
+   mode http
+ 
++  # https://serverfault.com/questions/608256/haproxy-hdr-ip-acl-unaffected-by-reqidel
++  # https://thisinterestsme.com/x-forwarded-for-spoofing-haproxy/
++  http-request del-header X-Forwarded-For
++
+   # Strip off Proxy headers to prevent HTTpoxy (https://httpoxy.org/)
+   http-request del-header Proxy
+ 
