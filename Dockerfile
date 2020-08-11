@@ -1,7 +1,7 @@
 ARG OKD_VER=v3.11.0
-ARG HAPROXY_RPM_VER=1.8.23
-ARG HAPROXY_RPM_RELEASE=3
-ARG HAPROXY_PATCH_VER=2.2.2
+ARG HAPROXY_RPM_VER=2.0.14
+ARG HAPROXY_RPM_RELEASE=1
+ARG HAPROXY_PATCH_VER=2.0.14
 
 FROM centos:7 AS RPM
 
@@ -20,12 +20,12 @@ RUN rpm -i haproxy-*.el7.src.rpm
 WORKDIR /root/rpmbuild/SPECS
 
 # FOR haproxy 2.0 testing only
-#RUN sed -i "s/${HAPROXY_RPM_VER}/${HAPROXY_PATCH_VER}/g" haproxy.spec
-#RUN sed -i 's/1.8\/src/2.2\/src/' haproxy.spec
-#RUN sed -i "s/${HAPROXY_RPM_RELEASE}%{?dist}/1%{?dist}/" haproxy.spec
-#RUN sed -i 's/linux2628/linux-glibc/' haproxy.spec
-#RUN sed -i '/Patch0/d' haproxy.spec
-#RUN sed -i '/patch0/d' haproxy.spec
+RUN sed -i "s/${HAPROXY_RPM_VER}/${HAPROXY_PATCH_VER}/g" haproxy.spec
+RUN sed -i 's/1.8\/src/2.0\/src/' haproxy.spec
+RUN sed -i "s/${HAPROXY_RPM_RELEASE}%{?dist}/1%{?dist}/" haproxy.spec
+RUN sed -i 's/linux2628/linux-glibc/' haproxy.spec
+RUN sed -i '/Patch0/d' haproxy.spec
+RUN sed -i '/patch0/d' haproxy.spec
 
 # OpenSSL
 RUN sed -i 's/USE_OPENSSL=1/USE_OPENSSL=1 SSL_INC=\/usr\/include\/openssl11\/ SSL_LIB=\/usr\/lib64\/openssl11\//' haproxy.spec
@@ -45,7 +45,7 @@ RUN for patch in /tmp/*.patch; do echo $patch; patch -u -l -f /var/lib/haproxy/c
 
 FROM openshift/origin-haproxy-router:${OKD_VER}
 
-COPY --from=RPM /root/rpmbuild/RPMS/x86_64/haproxy18*.rpm /tmp/
+COPY --from=RPM /root/rpmbuild/RPMS/x86_64/haproxy*.rpm /tmp/
 
 USER 0
 
